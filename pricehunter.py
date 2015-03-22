@@ -1,4 +1,4 @@
-#  coding:utf8
+﻿#  coding:utf8
 '''
 用例1 获取所有最新降价的产品名称和价格
 1 外部输入多个URL和匹配内容正则表达式，文件名 filename_all.cfg
@@ -155,20 +155,11 @@ def get_webpage_info(  url, re_str):
  
 if __name__ == '__main__':
     if TEST_MODE ==1 :
-      MAX_PAGE_IDX = 1  
-    filename= 'lego'+datetime.date.today().strftime('%Y%m%d')+'.txt'
+       MAX_PAGE_IDX = 1  
+    filename= 'ph'+datetime.date.today().strftime('%Y%m%d')+'.txt'
     fp = open(filename,'w')
-    re1 = re.compile( str_topic_re )
-    re2 = None #re.compile( str_content_re, re.S )
-    re3 = re.compile( str_cleanhtml_re )
-    re4 = re.compile( str_nextpage_re )
-    relist = [re1, re2, re3, re4]
-    amz = bbs.FixPageBBSCrawl()
-    amz.init_argv(urllist,  relist,  fp , MAX_PAGE_IDX )
+
           
-    urllist = [PAGE_URL_FIRST, PAGE_URL_prefix, PAGE_URL_postfix, TOPIC_URL_prefix, TOPIC_URL_postfix]  
-        
-    amz.OpenBBSTopicList1(urllist )
 
     fp.flush()
         

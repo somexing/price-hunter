@@ -1,6 +1,5 @@
-﻿#输入参数，获取各个url组合起来的结果并排序输出
-#需要选择不同个数结果，比如可以定义秒杀价 amz_cn的输出不了？
-#amzjp 编码错增加encode  gbk ignore参数  
+﻿#输入参数，获取各个非查询网站得来的结果并输出
+#存储和比较，输出
 
 import codecs
  
@@ -11,26 +10,39 @@ sys.path.append("../mymodule")
 import func
 import mt
 func.USE_PROXY = False
-func.SHOW_LOG = False
+func.SHOW_LOG = True
 mt.MAX_THREADS_NUM = 10 #线程池大小
 func.MAX_TRY_TIMES  = 3
-func.TIME_OUT = 4
+func.TIME_OUT = 5
 func.RUN_MODE = 3
 
+ 
+#site = [page_url, [xpath list ]]
+amz_com_bs = ['http://www.amazon.com/Best-Sellers-Toys-Games-Toy-Building-Sets/zgbs/toys-and-games/166099011/ref=zg_bs_166099011_pg_1?_encoding=UTF8&pg=',
+             [ '//*[@id="zg_centerListWrapper"]/div/div/div/a'
+               '//*[@id="zg_centerListWrapper"]/div/div/div/div/strong'
+               '//*[@id="zg_centerListWrapper"]/div/div/div/div/span' ]  ] 
 
-amz_com = ['http://www.amazon.com/s/url=search-alias%3Daps&field-keywords=',
-             ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
-            '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span',
-            '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/span[2]' ]  ] 
+ 
+amz_com_wishlist = ['http://www.amazon.com/gp/registry/wishlist/HNB27BLU3KRN/ie=UTF8&page=',
+             [ '//*[@id="itemInfo_I38IFR4H2DG3WY"]/div/div[1]/div[1]/h5/a'
+               '//*[@id="itemPrice_I38IFR4H2DG3WY"]'
+               '//*[@id="zg_centerListWrapper"]/div/div/div/div/span' ]  ] 
 
-z_cn  = [ 'http://www.amazon.cn/s/url=search-alias%3Daps&field-keywords=',
+
+
+z_cn_goldbox  = [ ' ',
           ['//*[@id="result_0"]/div/div/div[1]/a/h2' ,
           '//*[@id="result_0"]/div/div[3]/div[1]/a/span',
           '//*[@id="result_0"]/div/div[3]/div[2]/a/span']  ]
+ 
 
-yifan = ['http://www.yifanshop.com/search.php?keywords=',
-          ['//*[@id="compareForm"]/div/ul/li/div/a',
-          '//*[@id="compareForm"]/div/ul/li/div/font']          ]
+
+smzdm_fx_lego = ['http://search.smzdm.com/?c=faxian&s=lego',
+          ['/html/body/section/ul[2]/li[1]/div[2]/h2/a/span[1]',
+          '/html/body/section/ul[2]/li[1]/div[2]/h2/a/span[2]'],   
+          ['/html/body/section/ul[2]/li[2]/div[2]/h2/a/span[1]',
+          '/html/body/section/ul[2]/li[2]/div[2]/h2/a/span[2]']]
           
 amz_uk = ['http://www.amazon.co.uk/s/url=search-alias%3Daps&field-keywords=',
            ['//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span',
@@ -49,8 +61,7 @@ amz_de = [ 'http://www.amazon.de/s/url=search-alias%3Daps&field-keywords=',
           '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span']]
           
                     
-site_list = [ z_cn, amz_com, yifan ,   amz_de, amz_fr, amz_jp, amz_uk]
-site_list_simple = [ z_cn,    yifan ,    amz_jp]
+site_list = [ smzdm_fx_lego]
  
 
  
@@ -87,7 +98,7 @@ def mt_get_html_and_parser(url_dict, xpath_list):
     all_result_list = []     # other page    
     while (not page_result_queue.empty()):
        url , html  =   page_result_queue.get()
-       #html = html.decode('UTF-8', 'replace') # for show in gbk in windows cmd shell
+       #html = html.encode('UTF-8')
        tree = etree.HTML(html)
        idx = url_dict[url]
        result_list = []
@@ -113,20 +124,19 @@ def output ( 	all_result_list ):
 
 	for result_list in all_result_list:
  	   print(" %s " % (result_list[0]))
- 	   for i in  range(1,len(result_list)) : 	   	   
-		    print(" %-20s \t" % (str(result_list[i].encode("GBK", 'ignore'))) )#encode 问题		    
-		    #print(" %-20s \t" % ( result_list[i] ) )
+ 	   for i in  range(1,len(result_list)) :
+		    print(" %-20s \t" % (result_list[i]))
  	   print("\n")		          
     
 	
-def search_output	(keywords_list) :
-  for keywords in keywords_list :
-      print("start search keywords %s" % keywords)
+def search_output	( ) :
+ 
+      
       url_dict = {}
       idx = 0
       xpath_list = []		
       for site in site_list :
-         url =  ( site[0] + keywords )		  
+         url =  ( site[0]   )		  
          url_dict[url] = idx
          xpath_list.append(site[1])		  
          idx = idx + 1
@@ -136,9 +146,7 @@ def search_output	(keywords_list) :
    
 
 if __name__ == '__main__':
-	#reload(sys)
-	#sys.setdefaultencoding('utf-8')
-	keywords_list = getInput()
-	search_output(keywords_list)
+	#keywords_list = getInput()
+	search_output( )
 	 
 	

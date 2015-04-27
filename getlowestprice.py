@@ -1,7 +1,8 @@
 ﻿#输入参数，获取各个url组合起来的结果并排序输出
 #需要选择不同个数结果，比如可以定义秒杀价 amz_cn的输出不了？
 #amzjp 编码错增加encode  gbk ignore参数  
-
+#增加访问item的库存信息？
+#价格汇率转换，日元还有问题 怀疑和rmb ￥ utf8后一样了，所以改在site里增加一个rate
 import codecs
  
 import sys, time, Queue, urllib
@@ -17,44 +18,106 @@ func.MAX_TRY_TIMES  = 3
 func.TIME_OUT = 4
 func.RUN_MODE = 3
 
+currency_RMB = 1
+currency_EUR = 6.7
+currency_USD = 6.3
+currency_JPN = 0.052
+currency_GBR = 9.3
 
+
+ 
+#search 结果
 amz_com = ['http://www.amazon.com/s/url=search-alias%3Daps&field-keywords=',
+              currency_USD,    #货币换算rmb   
              ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
             '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span',
-            '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/span[2]' ]  ] 
+            '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/span[2]' ,
+             '//*[@id="result_0"]/div/div[2]/div/a']  ] 
+ 
+ 
+ 
 
+ 
 z_cn  = [ 'http://www.amazon.cn/s/url=search-alias%3Daps&field-keywords=',
-          ['//*[@id="result_0"]/div/div/div[1]/a/h2' ,
+             currency_RMB,
+          ['//*[@id="result_0"]/div/div[2]/div[1]/a/h2' ,
           '//*[@id="result_0"]/div/div[3]/div[1]/a/span',
           '//*[@id="result_0"]/div/div[3]/div[2]/a/span']  ]
 
 yifan = ['http://www.yifanshop.com/search.php?keywords=',
+           currency_RMB,   
           ['//*[@id="compareForm"]/div/ul/li/div/a',
           '//*[@id="compareForm"]/div/ul/li/div/font']          ]
           
 amz_uk = ['http://www.amazon.co.uk/s/url=search-alias%3Daps&field-keywords=',
-           ['//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span',
+            currency_GBR, 
+           ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
+           '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span',
            '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/span[2]'] ]
                      
 amz_fr = ['http://www.amazon.fr/s/url=search-alias%3Daps&field-keywords=',
+           currency_EUR,
           ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
           '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span']]
           
 amz_jp = [ 'http://www.amazon.co.jp/s/url=search-alias%3Daps&field-keywords=',
+          currency_JPN,
           ['//*[@id="result_0"]/div/div[2]/div[1]/a/h2',
           '//*[@id="result_0"]/div/div[3]/div[1]/a/span']]
 
 amz_de = [ 'http://www.amazon.de/s/url=search-alias%3Daps&field-keywords=',
+           currency_EUR,
+          ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
+          '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span']]
+
+amz_it = [ 'http://www.amazon.it/s/url=search-alias%3Daps&field-keywords=',
+           currency_EUR, 
           ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
           '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span']]
           
                     
-site_list = [ z_cn, amz_com, yifan ,   amz_de, amz_fr, amz_jp, amz_uk]
-site_list_simple = [ z_cn,    yifan ,    amz_jp]
- 
+                    
+site_list = [ z_cn, amz_com, yifan ,   amz_de, amz_fr, amz_jp, amz_uk, amz_it]
+#site_list = [ amz_jp]
 
- 
 
+  
+
+currency_dict= {'$':6.2, 'EUR':6.7, '￥':0.052, '£':9.3}
+
+
+def judge_currency(str_price):	
+		for c in currency_dict.keys() :
+		  u_c = c.decode("utf8")
+		  if u_c in str_price :
+		  	 print(" c in str_price. %s %s "%(u_c, str_price))
+		  	 return c
+		return None
+		
+def _change_currency(str_price, c):
+		  	 #if currency_dict.get(c) is None:         	  
+		  	 #   return  str_price
+		  	 u_c = c.decode("utf8")
+		  	 str_price = str_price[len(u_c):].strip()
+		  	 str_price = filter(lambda ch: ch in '0123456789,.~', str_price)		  	 
+		  	 if c == "EUR"	:
+		  	    str_price = str_price.replace(',','.')
+		  	 elif c == '￥' :
+		  	 	  str_price = str_price.replace(',','')  
+		  	  
+		  	 #print str_price
+		  	 currency = float(str_price) * currency_dict[c]
+		  	 #print str(currency)
+		  	 return str(currency)
+	 
+def change_currency(str_price, c_rate):  
+         if "EUR" in str_price:
+	       	  str_price = str_price.replace(',','.') 
+         str_price = filter(lambda ch: ch in '0123456789.', str_price)		  	 
+         #print str_price
+         currency = float(str_price) * c_rate
+         #print str(currency)
+         return str(currency)  
 # 从输入得到参数
 def getInput():
 	keywords_list = []
@@ -78,7 +141,7 @@ def get_html_func(_url):
     return resp
  
 
-def mt_get_html_and_parser(url_dict, xpath_list):    
+def mt_get_html_and_parser(url_dict, xpath_list, currency_list):    
     page_result_queue = Queue.Queue() 
     mt_create_queue_flag = False
     url_list = url_dict.keys()
@@ -92,29 +155,45 @@ def mt_get_html_and_parser(url_dict, xpath_list):
        idx = url_dict[url]
        result_list = []
        result_list.append(url)
-       for xpath in xpath_list[idx] :
-       	 r =  tree.xpath(xpath)
-       	 if ( len(r) == 0):
-       	 	 #print ("Empty result  extract from the url = %s, xpath   = %s\n " % (url, xpath ))    	 	 
-       	 	 result_list.append("extract failed or not found!")
-       	 	 break
-       	 elif len(r) > 1 :
-       	 	 print ("The number of results extract from the url = %s is %s ,, xpath = %s\n" % (url, len(r), xpath))
-       	 
-       	 item =  r[0].text.strip()   
-
-       	 result_list.append(item)
+       cur_rate = currency_list[idx]
+       for i in range(len(xpath_list[idx])) :
+       	 xpath = xpath_list[idx][i] 
+       	 r_list =  tree.xpath(xpath)
+       	 if ( len(r_list) == 0):
+       	 	 print (" %s \n extract 0 result \n xpath   = %s\n " % (url, xpath ))    	  
+       	 	 #result_list.append("extract failed or not found!")
+       	 	 continue
+       	 elif len(r_list) > 1 :
+       	 	 print ("The number of results extract from the url = %s is %s   xpath = %s\n" % (url, len(r_list), xpath))
+         for r in r_list:
+       	   item =  r.text.strip()   
+       	   #xpath 的第2开始都是价格要换算
+       	   result_list.append(item)
+       	   if i > 0 :
+       	   	 item = "RMB " + change_currency(item, cur_rate)
+       	   	 result_list.append(item)
+       	   #c = judge_currency(item)
+       	   #if c is not None :
+       	   #   item = item + " = RMB " + _change_currency(item, c) 	         	        
        if (len(result_list))  > 1 :#+ len(xpath_list[idx]) : #complete extract
           all_result_list.append(result_list)
     return   all_result_list
     	
 def output ( 	all_result_list ):
-	#all_result_list.sort(key = lambda x:x[2])
+	#change to float for compare  . 4: is to del RMB
+	try:
+	   all_result_list.sort(key = lambda x:float(x[3][4:])) 
+	except Exception , e:
+	   print( "failed on all_result_list  sort.  Exception %s "%(e))
 
 	for result_list in all_result_list:
  	   print(" %s " % (result_list[0]))
  	   for i in  range(1,len(result_list)) : 	   	   
-		    print(" %-20s \t" % (str(result_list[i].encode("GBK", 'ignore'))) )#encode 问题		    
+ 	   	  try:
+		        print(" %-20s \t" % (str(result_list[i].encode("GBK", 'ignore')))) #encode		    
+ 	   	  except Exception , e:
+		        print( " Exception ! encode  %s "%(result_list[i]))
+		    	
 		    #print(" %-20s \t" % ( result_list[i] ) )
  	   print("\n")		          
     
@@ -125,12 +204,14 @@ def search_output	(keywords_list) :
       url_dict = {}
       idx = 0
       xpath_list = []		
-      for site in site_list :
+      currency_list = []
+      for site in site_list : # every site
          url =  ( site[0] + keywords )		  
          url_dict[url] = idx
-         xpath_list.append(site[1])		  
+         currency_list.append(site[1])
+         xpath_list.append(site[2])		  
          idx = idx + 1
-      all_result_list = mt_get_html_and_parser(url_dict, xpath_list)
+      all_result_list = mt_get_html_and_parser(url_dict, xpath_list,currency_list)
       output(all_result_list)
 	
    

@@ -2,9 +2,10 @@
 
 
 import codecs
- 
 import sys, time, Queue, urllib
+import threading
 from lxml import etree
+from threading import Timer  
 
 sys.path.append("../mymodule")
 import func
@@ -16,11 +17,18 @@ func.MAX_TRY_TIMES  = 3
 func.TIME_OUT = 5
 func.RUN_MODE = 3
 
+
+
 #url需要增加如 B00NHQGE04 商品id
-amz_item  = [ 'http://www.amazon.com/Disney-Princess-Elsas-Sparkling-Castle/dp/',
+amz_item  = [ 'http://www.amazon.com/gp/product/',
                '//*[@id="merchant-info"]', 
                'Amazon.com' ,
                '//*[@id="priceblock_ourprice"]' ]	
+               
+ 
+		  	 
+		  	 
+		
  
 class target(object): 
 	      def __init__(self, _name, _url,
@@ -101,7 +109,10 @@ def get_html_func(_url):
     return resp
  
 
-def mt_get_html_and_parser(url_dict, target_list):    
+def mt_get_html_and_parser(url_dict, target_list ):    
+    global target_event
+    target_event.clear()
+    print("\nRun at %s"%(time.strftime("%Y/%m/%d %H:%M:%S")))	    
     page_result_queue = Queue.Queue() 
     mt_create_queue_flag = False
     url_list = url_dict.keys()
@@ -112,8 +123,10 @@ def mt_get_html_and_parser(url_dict, target_list):
       #print html
        idx = url_dict[url]
        target = target_list[idx]      
-       target.judge_have_stock(html)
-       target.judge_have_low_price(html)
+       r1 = target.judge_have_stock(html)
+       r2 = target.judge_have_low_price(html)
+    target_event.set()
+   
        
 # 从输入得到参数
 def getInput():
@@ -126,34 +139,58 @@ def getInput():
 	else:
   	 print(" I need a keywords! assumed one!")	
   	 keywords_list = ['10220']   	 
-  
-	print(" I will search %s keywords in %s sites " %(len(keywords_list), len(site_list)) )  
+  	
 	return keywords_list    
-            
+
+
+# 从输入得到参数
+def getInput():
+	keywords_list = []
+	argc = len(sys.argv )
+	if (argc > 1):
+  	 for i in  range(1, argc) :
+  	   keywords = urllib.quote( sys.argv[i]) #Replace special characters in string using the %xx escape.
+  	   keywords_list.append(keywords)
+	else:
+  	 print(" Assumed  run every 10s  !")	
+  	 keywords_list = ['10']   	 
+	return keywords_list            
+	
 if __name__ == "__main__":
-   target1 = target('lego41062', amz_item[0]+'B00NHQGE04',
-                    amz_item[1], amz_item[2],
-                    amz_item[3], '40')
-                    
-   target2 = target('lego76011', amz_item[0]+'B00GSPFDX0',
-                    amz_item[1], amz_item[2],
-                    amz_item[3], '15.95')
-                    
-                                        
+   argv_list = getInput()
+   timer_interval = float(argv_list[0])
+
    target_list = []
+   target1 = target('Snap Circuits SC-300', amz_item[0]+'B0000683A4',
+                    amz_item[1], amz_item[2],
+                    amz_item[3], '45.4')
    target_list.append(target1)
-   target_list.append(target2)
-       	  	   
-   url_dict = {}
+      	  	   
+ 
    idx = 0
    xpath_list = []		
+   url_dict = {}
    for t in target_list :
          url =  t.get_url() 
          url_dict[url] = idx         
          idx = idx + 1
-   result = mt_get_html_and_parser(url_dict, target_list)
-          	  
-	      
+         
+   target_event = threading.Event()
+#   t=Timer(timer_interval, mt_get_html_and_parser, (url_dict, target_list  ))  
+#   t.start()          
+         
+   while (True):      
+       result = mt_get_html_and_parser(url_dict, target_list)
+       time.sleep(float(timer_interval))
+
+'''   
+   while True:  
+      time.sleep(timer_interval)
+      target_event.wait()
+      t=Timer(timer_interval, mt_get_html_and_parser, (url_dict, target_list  ))  
+      t.start()    
+      print 'main running'         	  
+'''	      
 	         
 	             
 	     

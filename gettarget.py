@@ -1,5 +1,4 @@
-﻿#判断预定义的各个商品是否满足条件 （低价，有自营）
-
+#判断预定义的各个商品是否满足条件 （低价 或者 有自营库存）
 
 import codecs
 import sys, time, Queue, urllib
@@ -22,7 +21,7 @@ func.RUN_MODE = 3
 #url需要增加如 B00NHQGE04 商品id
 amz_item  = [ 'http://www.amazon.com/gp/product/',
                '//*[@id="merchant-info"]', 
-               'Amazon.com' ,
+               'Amazon.com' , #自营库存检查字符串 2
                '//*[@id="priceblock_ourprice"]' ]	
                
  
@@ -51,7 +50,7 @@ class target(object):
 	         return self.url
 	         
 	      def judge_have_stock(self, html ):
-	         if self.xpath_stock is None :
+	         if self.xpath_stock is None or self.have_stock_patten is None :
 	         	  return False
 	         tree = etree.HTML( html)
 	         r_list = tree.xpath(self.xpath_stock)
@@ -59,16 +58,16 @@ class target(object):
 	         	  return False
 	         if len(r_list) >  1 :
 	            print("extract more than 1 stock result , target name is %s"% self.name)
-	         self.stock_result = r_list[0].text.strip()
-	         print("%s get stock result : %s " % (self.name, self.stock_result))
+	         self.stock_result = r_list[0].text.strip()	         
 	         if self.have_stock_patten in self.stock_result : 	 
-	         	  print("%s has stock now !" %  (self.name))       	          	  
+	         	  print("%s : %s is in stock now ! " %  (time.strftime("%Y/%m/%d %H:%M:%S"), self.name))       	          	  
+	         	  #print("stock  : %s " % (  self.stock_result))
 	         	  return True
 	         else :
 	         	  return False
 	            
 	      def judge_have_low_price(self, html ):
-	         if self.xpath_price is None :
+	         if self.xpath_price is None or self.low_price_value is None :
 	         	  return False	      
 	         tree = etree.HTML( html)
 	         r_list =tree.xpath(self.xpath_price)
@@ -80,9 +79,9 @@ class target(object):
 	         self.price_result = r_list[0].text.strip()
 	         self.price_result = filter(lambda ch: ch in '0123456789.', self.price_result)
 	         #self.price_result.strip(['$',"EUR", ' '])
-	         print ("%s get price result : %s " %(self.name, self.price_result))
+	         
 	         if float(self.price_result) <= float(self.low_price_value) : 	         	          	  
-	         	  print("%s has low price now !" %  (self.name))       	          	  
+	         	  print("%s : %s has low price %s now ! " %  (time.strftime("%Y/%m/%d %H:%M:%S"),self.name, self.price_result))       	          	  
 	         	  return True
 	         else :
 	         	  return False 
@@ -112,7 +111,7 @@ def get_html_func(_url):
 def mt_get_html_and_parser(url_dict, target_list ):    
     global target_event
     target_event.clear()
-    print("\nRun at %s"%(time.strftime("%Y/%m/%d %H:%M:%S")))	    
+    #print("%s : start checking ....."%(time.strftime("%Y/%m/%d %H:%M:%S")))	    
     page_result_queue = Queue.Queue() 
     mt_create_queue_flag = False
     url_list = url_dict.keys()
@@ -129,18 +128,6 @@ def mt_get_html_and_parser(url_dict, target_list ):
    
        
 # 从输入得到参数
-def getInput():
-	keywords_list = []
-	argc = len(sys.argv )
-	if (argc > 1):
-  	 for i in  range(1, argc) :
-  	   keywords = urllib.quote( sys.argv[i]) #Replace special characters in string using the %xx escape.
-  	   keywords_list.append(keywords)
-	else:
-  	 print(" I need a keywords! assumed one!")	
-  	 keywords_list = ['10220']   	 
-  	
-	return keywords_list    
 
 
 # 从输入得到参数
@@ -149,7 +136,8 @@ def getInput():
 	argc = len(sys.argv )
 	if (argc > 1):
   	 for i in  range(1, argc) :
-  	   keywords = urllib.quote( sys.argv[i]) #Replace special characters in string using the %xx escape.
+  	   #keywords = urllib.quote( sys.argv[i]) #Replace special characters in string using the %xx escape.
+  	   keywords = sys.argv[i]
   	   keywords_list.append(keywords)
 	else:
   	 print(" Assumed  run every 10s  !")	
@@ -162,11 +150,27 @@ if __name__ == "__main__":
 
    target_list = []
    target1 = target('Snap Circuits SC-300', amz_item[0]+'B0000683A4',
+                    amz_item[1], None, #不检查库存
+                    amz_item[3], '45')
+   target_list.append(target1)                    
+   
+   target2 = target("LEGO Creator Expert Detective's Office 10246", amz_item[0]+'B00NHQGDZ0',
                     amz_item[1], amz_item[2],
-                    amz_item[3], '45.4')
-   target_list.append(target1)
+                    amz_item[3], '200')
+   target_list.append(target2)                 
+   
+   target3 = target("LEGO Creator 10232 Palace Cinema", amz_item[0]+'B00BFXP3G2',
+                    amz_item[1], amz_item[2],
+                    amz_item[3], '200')                    
+   target_list.append(target3)                    
+   
+   target4 = target("LEGO Creator Pet Shop 10218", amz_item[0]+'B004P2HMNM',
+                    amz_item[1], amz_item[2],
+                    amz_item[3], '200')                    
+   target_list.append(target4)        
       	  	   
- 
+   
+      
    idx = 0
    xpath_list = []		
    url_dict = {}
@@ -179,8 +183,9 @@ if __name__ == "__main__":
 #   t=Timer(timer_interval, mt_get_html_and_parser, (url_dict, target_list  ))  
 #   t.start()          
          
+         
    while (True):      
-       result = mt_get_html_and_parser(url_dict, target_list)
+       result = mt_get_html_and_parser(url_dict, target_list)   
        time.sleep(float(timer_interval))
 
 '''   

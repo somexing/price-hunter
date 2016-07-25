@@ -19,18 +19,18 @@ func.TIME_OUT = 4
 func.RUN_MODE = 3
 
 currency_RMB = 1
-currency_EUR = 6.7
-currency_USD = 6.3
-currency_JPN = 0.052
-currency_GBR = 9.3
+currency_EUR = 7.4 #6.7
+currency_USD = 6.5 #6.3 
+currency_JPN = 0.06
+currency_GBR = 9.4
 
 
  
 #search 结果
 amz_com = ['http://www.amazon.com/s/url=search-alias%3Daps&field-keywords=',
               currency_USD,    #货币换算rmb   
-             ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
-            '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span',
+             ['//*[@id="result_0"]/div/div/div/div[2]/div[2]/a/h2',
+            '//*[@id="result_0"]/div/div/div/div[2]/div[3]/div[1]/div[1]/a/span',
             '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/span[2]' ,
              '//*[@id="result_0"]/div/div[2]/div/a']  ] 
  
@@ -40,8 +40,8 @@ amz_com = ['http://www.amazon.com/s/url=search-alias%3Daps&field-keywords=',
  
 z_cn  = [ 'http://www.amazon.cn/s/url=search-alias%3Daps&field-keywords=',
              currency_RMB,
-          ['//*[@id="result_0"]/div/div[2]/div[1]/a/h2' ,
-          '//*[@id="result_0"]/div/div[3]/div[1]/a/span',
+          ['//*[@id="result_0"]/div/div[3]/div[1]/a/h2' ,
+          '//*[@id="result_0"]/div/div[4]/div[1]/a/span',
           '//*[@id="result_0"]/div/div[3]/div[2]/a/span']  ]
 
 yifan = ['http://www.yifanshop.com/search.php?keywords=',
@@ -51,14 +51,14 @@ yifan = ['http://www.yifanshop.com/search.php?keywords=',
           
 amz_uk = ['http://www.amazon.co.uk/s/url=search-alias%3Daps&field-keywords=',
             currency_GBR, 
-           ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
-           '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span',
+           ['//*[@id="result_0"]/div/div/div/div[2]/div[2]/a/h2',     #goods title
+           '//*[@id="result_0"]/div/div/div/div[2]/div[3]/div[1]/div[1]/a/span',  # price
            '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/span[2]'] ]
-                     
+            
 amz_fr = ['http://www.amazon.fr/s/url=search-alias%3Daps&field-keywords=',
            currency_EUR,
-          ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
-          '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span']]
+          ['//*[@id="result_0"]/div/div/div/div[2]/div[2]/a/h2',
+          '//*[@id="result_0"]/div/div/div/div[2]/div[3]/div[1]/div[1]/a/span'   ]] 
           
 amz_jp = [ 'http://www.amazon.co.jp/s/url=search-alias%3Daps&field-keywords=',
           currency_JPN,
@@ -67,13 +67,13 @@ amz_jp = [ 'http://www.amazon.co.jp/s/url=search-alias%3Daps&field-keywords=',
 
 amz_de = [ 'http://www.amazon.de/s/url=search-alias%3Daps&field-keywords=',
            currency_EUR,
-          ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
-          '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span']]
+          ['//*[@id="result_0"]/div/div/div/div[2]/div[2]/a/h2',
+          '//*[@id="result_0"]/div/div/div/div[2]/div[3]/div[1]/div[1]/a/span']]
 
 amz_it = [ 'http://www.amazon.it/s/url=search-alias%3Daps&field-keywords=',
            currency_EUR, 
-          ['//*[@id="result_0"]/div/div/div/div[2]/div[1]/a/h2',
-          '//*[@id="result_0"]/div/div/div/div[2]/div[2]/div[1]/div[1]/a/span']]
+          ['//*[@id="result_0"]/div/div/div/div[2]/div[2]/a/h2',
+          '//*[@id="result_0"]/div/div/div/div[2]/div[3]/div[1]/div[1]/a/span']]
           
                     
                     
@@ -219,6 +219,7 @@ def search_output	(keywords_list) :
 if __name__ == '__main__':
 	#reload(sys)
 	#sys.setdefaultencoding('utf-8')
+	print("this program version date: 20160323  left some site unfixed" )
 	keywords_list = getInput()
 	search_output(keywords_list)
 	 
